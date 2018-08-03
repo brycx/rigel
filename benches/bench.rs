@@ -36,7 +36,7 @@ use sha2::Sha512;
 use test::Bencher;
 
 #[bench]
-fn rigel_hmac_sha512(b: &mut Bencher) {
+fn rigel(b: &mut Bencher) {
     let key = [0x61; 64];
     let message = "what do ya want for nothing?".as_bytes();
 
@@ -46,7 +46,7 @@ fn rigel_hmac_sha512(b: &mut Bencher) {
 }
 
 #[bench]
-fn RustCrypto_hmac_sha512(b: &mut Bencher) {
+fn RustCrypto(b: &mut Bencher) {
     let key = [0x61; 64];
     let message = "what do ya want for nothing?".as_bytes();
 
@@ -61,7 +61,7 @@ fn RustCrypto_hmac_sha512(b: &mut Bencher) {
 }
 
 #[bench]
-fn orion_hmac_sha512(b: &mut Bencher) {
+fn orion(b: &mut Bencher) {
     let key = [0x61; 64];
     let message = "what do ya want for nothing?".as_bytes();
 
@@ -77,7 +77,7 @@ fn orion_hmac_sha512(b: &mut Bencher) {
 }
 
 #[bench]
-fn ring_hmac_sha512(b: &mut Bencher) {
+fn ring(b: &mut Bencher) {
     let key = [0x61; 64];
     let message = "what do ya want for nothing?".as_bytes();
 
