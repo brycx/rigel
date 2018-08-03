@@ -80,6 +80,7 @@ pub fn hmac_sha512(key: &[u8], message: &[u8]) -> [u8; 64] {
 
     mac
 }
+
 /// Verify a HMAC-SHA512 MAC.
 pub fn verify(expected_hmac: &[u8], key: &[u8], message: &[u8]) -> bool {
     let mac = hmac_sha512(key, message);
