@@ -10,7 +10,8 @@ should be used at own risk.
 
 ### Example
 
-__Generate and verify a MAC__:```rust
+__Generate and verify a MAC__:
+```rust
 extern crate rigel;
 
 let mac = rigel::hmac_sha512("Secret key".as_bytes(), "Message".as_bytes());
