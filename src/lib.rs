@@ -61,12 +61,8 @@ pub fn hmac_sha512(key: &[u8], message: &[u8]) -> [u8; 64] {
     // First 128 bytes is the ipad
     hash_ipad.input(&buffer[..128]);
     hash_ipad.input(message);
-    let hash_one = hash_ipad.result();
-    // idx - 128 is used instead of a counter. This way indexing will happen 0..64
-    // without having to assign a seperate index counter value
-    for idx in 128..192 {
-        buffer[idx] = hash_one[idx - 128];
-    }
+    buffer[128..].copy_from_slice(&hash_ipad.result());
+
     // Make first 128 bytes the opad
     for idx in buffer.iter_mut().take(128) {
         // XOR with the result of XOR(0x36 ^ 0x5C)
