@@ -38,10 +38,10 @@ fn pad_key_to_ipad(key: &[u8]) -> [u8; 192] {
     let mut padded_key = [0x36; 192];
 
     if key.len() > 128 {
-        let hash = sha2::Sha512::digest(&key);
+        padded_key[..64].copy_from_slice(&sha2::Sha512::digest(&key));
 
-        for idx in 0..hash.len() {
-            padded_key[idx] ^= hash[idx];
+        for itm in padded_key.iter_mut().take(64) {
+            *itm ^= 0x36;
         }
     } else {
         for idx in 0..key.len() {
