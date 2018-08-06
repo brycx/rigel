@@ -1,3 +1,5 @@
+### rigel ![Build Status](https://travis-ci.org/brycx/rigel.svg?branch=master) [![codecov](https://codecov.io/gh/brycx/rigel/branch/master/graph/badge.svg)](https://codecov.io/gh/brycx/rigel)
+
 
 ### About
 `rigel` is a minimal implementation of HMAC with SHA512, which is optimized for use
