@@ -87,3 +87,57 @@ pub fn verify(expected_hmac: &[u8], key: &[u8], message: &[u8]) -> bool {
         _ => panic!("ERROR")
     }
 }
+
+/// Struct for using HMAC with streaming messages.
+pub struct HmacSha512 {
+    pub buffer: [u8; 192],
+    pub hasher: Sha512
+}
+
+impl HmacSha512 {
+
+    pub fn init(&mut self, key: &[u8]) {
+        self.buffer = pad_key_to_ipad(key);
+        // First 128 bytes is the ipad
+        self.hasher.input(&self.buffer[..128]);
+    }
+
+    pub fn update(&mut self, message: &[u8]) {
+        self.hasher.input(message);
+    }
+
+    pub fn finalize(&mut self) -> [u8; 64] {
+
+        let mut hash_first = Sha512::default();
+        core::mem::swap(&mut self.hasher, &mut hash_first);
+
+        self.buffer[128..].copy_from_slice(&hash_first.result());
+
+        // Make first 128 bytes the opad
+        for idx in self.buffer.iter_mut().take(128) {
+            // XOR with the result of XOR(0x36 ^ 0x5C)
+            // Which is equivalent of inverting the ipad
+            // and then constructing the opad
+            *idx ^= 0x6A;
+        }
+
+        let mut mac: [u8; 64] = [0u8; 64];
+        mac.copy_from_slice(&sha2::Sha512::digest(&self.buffer));
+
+        mac
+    }
+
+    pub fn verify(&mut self, expected_hmac: &[u8], secret_key: &[u8], message: &[u8]) -> bool {
+
+        let mut mac = HmacSha512 {buffer: [0u8; 192], hasher: sha2::Sha512::default()};
+        mac.init(secret_key);
+        mac.update(message);
+
+        match mac.finalize().ct_eq(expected_hmac).unwrap_u8() {
+            0 => false,
+            1 => true,
+            _ => panic!("ERROR")
+        }
+
+    }
+}

@@ -34,14 +34,29 @@ use rigel::hmac_sha512;
 use ring::{digest, hmac as ring_hmac};
 use sha2::Sha512;
 use test::Bencher;
+use rigel::HmacSha512 as rigel_stream;
 
 #[bench]
-fn rigel(b: &mut Bencher) {
+fn rigel_one_shot(b: &mut Bencher) {
     let key = [0x61; 64];
     let message = "what do ya want for nothing?".as_bytes();
 
     b.iter(|| {
         hmac_sha512(&key, message);
+    });
+}
+
+#[bench]
+fn rigel_stream(b: &mut Bencher) {
+    let key = [0x61; 64];
+    let message = "what do ya want for nothing?".as_bytes();
+
+    b.iter(|| {
+        let mut hmac = rigel_stream {buffer: [0u8; 192], hasher: sha2::Sha512::default()};
+
+        hmac.init(&key);
+        hmac.update(&message);
+        hmac.finalize();
     });
 }
 

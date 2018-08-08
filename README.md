@@ -12,13 +12,26 @@ should be used at own risk.
 
 ### Example
 
-__Generate and verify a MAC__:
+***With the one-shot API:***
 ```rust
 extern crate rigel;
 
 let mac = rigel::hmac_sha512("Secret key".as_bytes(), "Message".as_bytes());
 
 assert!(rigel::verify(&mac, "Secret key".as_bytes(), "Message".as_bytes()));
+
+```
+
+***With streaming messages:***
+```rust
+extern crate rigel;
+extern crate sha2;
+
+let mut mac = rigel::HmacSha512{buffer: [0u8; 192], hasher: sha2::Sha512::default()};
+mac.init("Secret key".as_bytes());
+mac.update("Message".as_bytes());
+let res = mac.finalize();
+assert!(mac.verify(&res, "Secret key".as_bytes(), "Message".as_bytes()));
 
 ```
 
