@@ -30,11 +30,10 @@ extern crate sha2;
 extern crate test;
 
 use hmac::{Hmac, Mac};
-use rigel::hmac_sha512;
 use ring::{digest, hmac as ring_hmac};
 use sha2::Sha512;
 use test::Bencher;
-use rigel::HmacSha512 as rigel_stream;
+use rigel::{init, hmac_sha512};
 
 #[bench]
 fn rigel_one_shot(b: &mut Bencher) {
@@ -42,7 +41,9 @@ fn rigel_one_shot(b: &mut Bencher) {
     let message = "what do ya want for nothing?".as_bytes();
 
     b.iter(|| {
-        hmac_sha512(&key, message);
+
+        hmac_sha512(&key, &message);
+
     });
 }
 
@@ -52,9 +53,8 @@ fn rigel_stream(b: &mut Bencher) {
     let message = "what do ya want for nothing?".as_bytes();
 
     b.iter(|| {
-        let mut hmac = rigel_stream {buffer: [0u8; 192], hasher: sha2::Sha512::default()};
 
-        hmac.init(&key);
+        let mut hmac = init(&key);
         hmac.update(&message);
         hmac.finalize();
     });

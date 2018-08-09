@@ -6,6 +6,8 @@
 with embedded devices. `rigel` minimizes the amount of allocations made, while
 still upholding performance speed.
 
+You can read more about these optimizations [here](https://brycx.github.io/2018/08/06/hmac-and-precomputation-optimization.html).
+
 ### Security
 This library has at no point received any formal cryptographic/security audit. It
 should be used at own risk.
@@ -25,10 +27,8 @@ assert!(rigel::verify(&mac, "Secret key".as_bytes(), "Message".as_bytes()));
 ***With streaming messages:***
 ```rust
 extern crate rigel;
-extern crate sha2;
 
-let mut mac = rigel::HmacSha512{buffer: [0u8; 192], hasher: sha2::Sha512::default()};
-mac.init("Secret key".as_bytes());
+let mut mac = rigel::init("Secret key".as_bytes());
 mac.update("Message".as_bytes());
 let res = mac.finalize();
 assert!(mac.verify(&res, "Secret key".as_bytes(), "Message".as_bytes()));

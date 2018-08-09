@@ -27,7 +27,7 @@ mod rfc4231 {
     extern crate hex;
     extern crate sha2;
     use self::hex::decode;
-    use {verify, hmac_sha512, HmacSha512};
+    use {init, hmac_sha512, verify};
 
     fn hmac_test_runner(
         secret_key: &[u8],
@@ -36,20 +36,18 @@ mod rfc4231 {
         should_be: bool,
     ) -> bool {
 
-        let mac = hmac_sha512(secret_key, message);
+        let mut mac = init(secret_key);
+        mac.update(message);
+        let stream_res = mac.finalize();
 
-        let mut mac_stream = HmacSha512 {buffer: [0u8; 192], hasher: sha2::Sha512::default()};
+        let one_shot = hmac_sha512(secret_key, message);
 
-        mac_stream.init(secret_key);
-        mac_stream.update(message);
-        let stream_res = mac_stream.finalize();
-        assert_eq!(mac.as_ref(), stream_res.as_ref());
-        assert!(mac_stream.verify(&stream_res, secret_key, message));
-
+        assert!(verify(&one_shot, secret_key, message));
+        assert!(mac.verify(&stream_res, secret_key, message));
         // If the MACs are modified, then they should not be equal to the expected
-        assert_ne!(&mac[..mac.len() - 1], expected);
+        assert_ne!(&stream_res[..stream_res.len() - 1], expected);
 
-        should_be == ((mac.as_ref() == expected.as_ref()) == (verify(expected, secret_key, message)))
+        should_be == ((stream_res.as_ref() == expected.as_ref()))
     }
 
     #[test]
