@@ -29,11 +29,11 @@ use sha2::{Digest, Sha512};
 use subtle::ConstantTimeEq;
 
 /// Pad key and construct inner-padding
-fn pad_key_to_ipad(key: &[u8]) -> [u8; 192] {
+fn pad_key_to_ipad(key: &[u8]) -> [u8; 128] {
 
-    // Initialize to 192 * (0x00 ^ 0x36) so that
+    // Initialize to 128 * (0x00 ^ 0x36) so that
     // we can later xor the rest of the key in-place
-    let mut padded_key = [0x36; 192];
+    let mut padded_key = [0x36; 128];
 
     if key.len() > 128 {
         padded_key[..64].copy_from_slice(&sha2::Sha512::digest(&key));
@@ -54,23 +54,24 @@ fn pad_key_to_ipad(key: &[u8]) -> [u8; 192] {
 /// HMAC-SHA512 one-shot function. Returns a MAC.
 pub fn hmac_sha512(key: &[u8], message: &[u8]) -> [u8; 64] {
 
-    let mut hash_ipad = Sha512::default();
-    let mut buffer: [u8; 192] = pad_key_to_ipad(key);
-    // First 128 bytes is the ipad
-    hash_ipad.input(&buffer[..128]);
-    hash_ipad.input(message);
-    buffer[128..].copy_from_slice(&hash_ipad.result());
+    let mut hash_ires = Sha512::default();
+    let mut buffer = pad_key_to_ipad(key);
+    hash_ires.input(&buffer);
+    hash_ires.input(message);
 
-    // Make first 128 bytes the opad
-    for idx in buffer.iter_mut().take(128) {
+    for idx in buffer.iter_mut() {
         // XOR with the result of XOR(0x36 ^ 0x5C)
         // Which is equivalent of inverting the ipad
         // and then constructing the opad
         *idx ^= 0x6A;
     }
 
+    let mut hash_ores = Sha512::default();
+    hash_ores.input(&buffer);
+    hash_ores.input(&hash_ires.result());
+
     let mut mac: [u8; 64] = [0u8; 64];
-    mac.copy_from_slice(&sha2::Sha512::digest(&buffer));
+    mac.copy_from_slice(&hash_ores.result());
 
     mac
 }
@@ -88,7 +89,7 @@ pub fn verify(expected_hmac: &[u8], key: &[u8], message: &[u8]) -> bool {
 
 /// Struct for using HMAC with streaming messages.
 pub struct HmacSha512 {
-    buffer: [u8; 192],
+    buffer: [u8; 128],
     hasher: Sha512
 }
 
@@ -107,6 +108,8 @@ impl HmacSha512 {
                 self.buffer[idx] ^= key[idx];
             }
         }
+
+        self.hasher.input(&self.buffer);
     }
     /// This can be called multiple times for streaming messages.
     pub fn update(&mut self, message: &[u8]) {
@@ -115,21 +118,22 @@ impl HmacSha512 {
     /// Retrieve MAC.
     pub fn finalize(&mut self) -> [u8; 64] {
 
-        let mut hash_first = Sha512::default();
-        core::mem::swap(&mut self.hasher, &mut hash_first);
+        let mut hash_ires = Sha512::default();
+        core::mem::swap(&mut self.hasher, &mut hash_ires);
 
-        self.buffer[128..].copy_from_slice(&hash_first.result());
-
-        // Make first 128 bytes the opad
-        for idx in self.buffer.iter_mut().take(128) {
+        for idx in self.buffer.iter_mut() {
             // XOR with the result of XOR(0x36 ^ 0x5C)
             // Which is equivalent of inverting the ipad
             // and then constructing the opad
             *idx ^= 0x6A;
         }
 
+        let mut hash_ores = Sha512::default();
+        hash_ores.input(&self.buffer);
+        hash_ores.input(&hash_ires.result());
+
         let mut mac: [u8; 64] = [0u8; 64];
-        mac.copy_from_slice(&sha2::Sha512::digest(&self.buffer));
+        mac.copy_from_slice(&hash_ores.result());
 
         mac
     }
@@ -151,14 +155,13 @@ impl HmacSha512 {
 pub fn init(secret_key: &[u8]) -> HmacSha512 {
 
     let mut mac = HmacSha512 {
-        // Initialize to 192 * (0x00 ^ 0x36) so that
+        // Initialize to 128 * (0x00 ^ 0x36) so that
         // we can later xor the rest of the key in-place
-        buffer: [0x36; 192],
+        buffer: [0x36; 128],
         hasher: sha2::Sha512::default()
     };
 
     mac.pad_key_to_ipad(secret_key);
-    mac.hasher.input(&mac.buffer[..128]);
 
     mac
 }
