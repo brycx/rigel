@@ -33,6 +33,10 @@ mac.update("Message".as_bytes());
 let res = mac.finalize();
 assert!(mac.verify(&res, "Secret key".as_bytes(), "Message".as_bytes()));
 
+let mut mac_out = [0u8; 64];
+mac.reset();
+mac.update("Other message".as_bytes());
+mac.finalize_with_dst(&mut mac_out);
 ```
 
 ### Performance
