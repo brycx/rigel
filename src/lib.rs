@@ -265,3 +265,15 @@ fn hmac_verify_after_reset() {
 
     assert_eq!(out.as_ref(), mac.finalize().as_ref());
 }
+
+#[test]
+fn hmac_verify_after_reset_err() {
+    let mut out = [0u8; 64];
+    let mut mac = init("secret key".as_bytes());
+    mac.update("msg".as_bytes());
+    mac.finalize_with_dst(&mut out);
+    mac.reset();
+    mac.update("other message".as_bytes());
+
+    assert_ne!(out.as_ref(), mac.finalize().as_ref());
+}
