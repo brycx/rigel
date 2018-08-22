@@ -136,8 +136,8 @@ impl HmacSha512 {
         if self.is_finalized {
             for idx in self.buffer.iter_mut() {
                 // XOR with the result of XOR(0x36 ^ 0x5C)
-                // Which is equivalent of inverting the ipad
-                // and then constructing the opad
+                // Which is equivalent of inverting the opad
+                // and then constructing the ipad
                 *idx ^= 0x6A;
             }
             self.hasher.input(&self.buffer);
