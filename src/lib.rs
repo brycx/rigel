@@ -25,8 +25,10 @@
 pub mod tests;
 extern crate sha2;
 extern crate subtle;
+extern crate seckey;
 use sha2::{Digest, Sha512};
 use subtle::ConstantTimeEq;
+use seckey::zero;
 
 /// Pad key and construct inner-padding
 fn pad_key_to_ipad(key: &[u8]) -> [u8; 128] {
@@ -71,6 +73,8 @@ pub fn hmac_sha512(key: &[u8], message: &[u8]) -> [u8; 64] {
     let mut mac: [u8; 64] = [0u8; 64];
     mac.copy_from_slice(&hash_ores.result());
 
+    zero(&mut buffer);
+
     mac
 }
 
@@ -90,6 +94,12 @@ pub struct HmacSha512 {
     buffer: [u8; 128],
     hasher: Sha512,
     is_finalized: bool,
+}
+
+impl Drop for HmacSha512 {
+    fn drop(&mut self) {
+        zero(&mut self.buffer)
+    }
 }
 
 impl HmacSha512 {
