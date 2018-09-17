@@ -11,8 +11,16 @@ rust:
   - beta
   - nightly
 matrix:
-  allow_failures:
-    - rust: nightly
+  include:
+    # Ensure building in no_std is possible
+    - env: TARGET=thumbv7em-none-eabihf
+      rust: nightly
+      install:
+        - cargo install xargo || true
+        - rustup target install thumbv7em-none-eabihf
+        - rustup component add rust-src
+      script:
+        - xargo build --no-default-features --verbose --target $TARGET
 script:
 - cargo clean
 - cargo build

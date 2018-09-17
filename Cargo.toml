@@ -16,8 +16,8 @@ exclude = [
 
 [dependencies]
 sha2 = "0.7.1"
-subtle = "0.9.0"
-seckey = "0.9.1"
+subtle = { version = "0.9.0", default-features = false }
+seckey = { version = "0.9.1", default-features = false }
 
 [dev-dependencies]
 hex = "0.3.2"
