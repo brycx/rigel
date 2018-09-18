@@ -42,7 +42,6 @@ mod rfc4231 {
         let one_shot = hmac_sha512(secret_key, message);
 
         assert!(verify(&one_shot, secret_key, message));
-        assert!(mac.verify(&stream_res, secret_key, message));
         // If the MACs are modified, then they should not be equal to the expected
         assert_ne!(&stream_res[..stream_res.len() - 1], expected);
 

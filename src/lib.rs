@@ -174,17 +174,6 @@ impl HmacSha512 {
 
         dst.copy_from_slice(&hash_ores.result()[..dst_len]);
     }
-    /// Verify a MAC.
-    pub fn verify(&mut self, expected_hmac: &[u8], secret_key: &[u8], message: &[u8]) -> bool {
-        let mut mac = init(secret_key);
-        mac.update(message);
-
-        match mac.finalize().ct_eq(expected_hmac).unwrap_u8() {
-            0 => false,
-            1 => true,
-            _ => panic!("ERROR"),
-        }
-    }
 }
 
 /// Initialize HmacSha512 struct with a given key, for use with streaming messages.
@@ -250,8 +239,8 @@ fn hmac_verify() {
 
     let mac_oneshot = hmac_sha512("secret key".as_bytes(), "msg".as_bytes());
 
-    assert!(mac.verify(&out, "secret key".as_bytes(), "msg".as_bytes()));
-    assert!(mac.verify(&mac_oneshot, "secret key".as_bytes(), "msg".as_bytes()));
+    assert!(verify(&out, "secret key".as_bytes(), "msg".as_bytes()));
+    assert!(verify(&mac_oneshot, "secret key".as_bytes(), "msg".as_bytes()));
     assert!(verify(&out, "secret key".as_bytes(), "msg".as_bytes()));
     assert!(verify(
         &mac_oneshot,
