@@ -30,6 +30,17 @@ use sha2::{Digest, Sha512};
 use subtle::ConstantTimeEq;
 use seckey::zero;
 
+
+/// Invert the buffer from opad to ipad or vice versa
+fn reverse_pad(buffer: &mut [u8; 128]) {
+    for idx in buffer.iter_mut() {
+        // XOR with the result of XOR(0x36 ^ 0x5C)
+        // Which is equivalent of inverting the ipad
+        // and then constructing the opad
+        *idx ^= 0x6A;
+    }
+}
+
 /// Pad key and construct inner-padding
 fn pad_key_to_ipad(key: &[u8]) -> [u8; 128] {
     // Initialize to 128 * (0x00 ^ 0x36) so that
@@ -59,12 +70,7 @@ pub fn hmac_sha512(key: &[u8], message: &[u8]) -> [u8; 64] {
     hash_ires.input(&buffer);
     hash_ires.input(message);
 
-    for idx in buffer.iter_mut() {
-        // XOR with the result of XOR(0x36 ^ 0x5C)
-        // Which is equivalent of inverting the ipad
-        // and then constructing the opad
-        *idx ^= 0x6A;
-    }
+    reverse_pad(&mut buffer);
 
     let mut hash_ores = Sha512::default();
     hash_ores.input(&buffer);
@@ -130,12 +136,7 @@ impl HmacSha512 {
         let mut hash_ires = Sha512::default();
         core::mem::swap(&mut self.hasher, &mut hash_ires);
 
-        for idx in self.buffer.iter_mut() {
-            // XOR with the result of XOR(0x36 ^ 0x5C)
-            // Which is equivalent of inverting the ipad
-            // and then constructing the opad
-            *idx ^= 0x6A;
-        }
+        reverse_pad(&mut self.buffer);
 
         hash_ores.input(&self.buffer);
         hash_ores.input(&hash_ires.result());
@@ -144,12 +145,7 @@ impl HmacSha512 {
     /// Reset to 'init()' state.
     pub fn reset(&mut self) {
         if self.is_finalized {
-            for idx in self.buffer.iter_mut() {
-                // XOR with the result of XOR(0x36 ^ 0x5C)
-                // Which is equivalent of inverting the opad
-                // and then constructing the ipad
-                *idx ^= 0x6A;
-            }
+            reverse_pad(&mut self.buffer);
             self.hasher.input(&self.buffer);
             self.is_finalized = false;
         } else {
