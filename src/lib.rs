@@ -42,31 +42,28 @@ fn reverse_pad(buffer: &mut [u8; 128]) {
 }
 
 /// Pad key and construct inner-padding
-fn pad_key_to_ipad(key: &[u8]) -> [u8; 128] {
-    // Initialize to 128 * (0x00 ^ 0x36) so that
-    // we can later xor the rest of the key in-place
-    let mut padded_key = [0x36; 128];
-
+fn pad_key_to_ipad(key: &[u8], buffer: &mut [u8; 128]) {
     if key.len() > 128 {
-        padded_key[..64].copy_from_slice(&sha2::Sha512::digest(&key));
+        buffer[..64].copy_from_slice(&sha2::Sha512::digest(&key));
 
-        for itm in padded_key.iter_mut().take(64) {
+        for itm in buffer.iter_mut().take(64) {
             *itm ^= 0x36;
         }
     } else {
         for idx in 0..key.len() {
-            padded_key[idx] ^= key[idx];
+            buffer[idx] ^= key[idx];
         }
     }
-
-    padded_key
 }
 
 #[inline(always)]
 /// HMAC-SHA512 one-shot function. Returns a MAC.
 pub fn hmac_sha512(key: &[u8], message: &[u8]) -> [u8; 64] {
     let mut hash_ires = Sha512::default();
-    let mut buffer = pad_key_to_ipad(key);
+    // Initialize to 128 * (0x00 ^ 0x36) so that
+    // we can later xor the rest of the key in-place
+    let mut buffer = [0x36; 128];
+    pad_key_to_ipad(key, &mut buffer);
     hash_ires.input(&buffer);
     hash_ires.input(message);
 
@@ -84,7 +81,7 @@ pub fn hmac_sha512(key: &[u8], message: &[u8]) -> [u8; 64] {
     mac
 }
 
-/// Verify a HMAC-SHA512 MAC.
+/// Verify a HMAC-SHA512 MAC in constant time.
 pub fn verify(expected_hmac: &[u8], key: &[u8], message: &[u8]) -> bool {
     let mac = hmac_sha512(key, message);
 
@@ -109,22 +106,6 @@ impl Drop for HmacSha512 {
 }
 
 impl HmacSha512 {
-    /// Pad key and construct inner-padding
-    fn pad_key_to_ipad(&mut self, key: &[u8]) {
-        if key.len() > 128 {
-            self.buffer[..64].copy_from_slice(&sha2::Sha512::digest(&key));
-
-            for itm in self.buffer.iter_mut().take(64) {
-                *itm ^= 0x36;
-            }
-        } else {
-            for idx in 0..key.len() {
-                self.buffer[idx] ^= key[idx];
-            }
-        }
-
-        self.hasher.input(&self.buffer);
-    }
     /// Call the core finalization steps.
     fn core_finalize(&mut self, hash_ores: &mut Sha512) {
         if self.is_finalized {
@@ -178,6 +159,7 @@ impl HmacSha512 {
 
 /// Initialize HmacSha512 struct with a given key, for use with streaming messages.
 pub fn init(secret_key: &[u8]) -> HmacSha512 {
+
     let mut mac = HmacSha512 {
         // Initialize to 128 * (0x00 ^ 0x36) so that
         // we can later xor the rest of the key in-place
@@ -186,7 +168,8 @@ pub fn init(secret_key: &[u8]) -> HmacSha512 {
         is_finalized: false,
     };
 
-    mac.pad_key_to_ipad(secret_key);
+    pad_key_to_ipad(secret_key, &mut mac.buffer);
+    mac.hasher.input(&mac.buffer);
 
     mac
 }
