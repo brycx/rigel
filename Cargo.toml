@@ -1,6 +1,6 @@
 [package]
 name = "rigel"
-version = "0.0.8"
+version = "0.0.9"
 authors = ["brycx <brycx@protonmail.com>"]
 description = "HMAC-SHA512 implementation optimized for embedded devices"
 keywords = [ "cryptography", "crypto", "hmac", "optimization", "sha512" ]
