@@ -29,9 +29,18 @@ use seckey::zero;
 use sha2::{Digest, Sha512};
 use subtle::ConstantTimeEq;
 
+/// The blocksize for the hash function SHA512.
+pub const SHA2_BLOCKSIZE: usize = 128;
+/// The output size for the hash function SHA512.
+pub const HLEN: usize = 64;
+/// Type for an array of length `SHA2_BLOCKSIZE`.
+pub type PadArray = [u8; SHA2_BLOCKSIZE];
+/// Type for a MAC-sized array.
+pub type MacArray = [u8; HLEN];
+
 #[inline(always)]
 /// Invert the buffer from opad to ipad or vice versa
-fn reverse_pad(buffer: &mut [u8; 128]) {
+fn reverse_pad(buffer: &mut PadArray) {
     for idx in buffer.iter_mut() {
         // XOR with the result of XOR(0x36 ^ 0x5C)
         // Which is equivalent of inverting the ipad
@@ -42,11 +51,11 @@ fn reverse_pad(buffer: &mut [u8; 128]) {
 
 #[inline(always)]
 /// Pad key and construct inner-padding
-fn pad_key_to_ipad(key: &[u8], buffer: &mut [u8; 128]) {
-    if key.len() > 128 {
-        buffer[..64].copy_from_slice(&sha2::Sha512::digest(&key));
+fn pad_key_to_ipad(key: &[u8], buffer: &mut PadArray) {
+    if key.len() > SHA2_BLOCKSIZE {
+        buffer[..HLEN].copy_from_slice(&sha2::Sha512::digest(&key));
 
-        for itm in buffer.iter_mut().take(64) {
+        for itm in buffer.iter_mut().take(HLEN) {
             *itm ^= 0x36;
         }
     } else {
@@ -58,11 +67,11 @@ fn pad_key_to_ipad(key: &[u8], buffer: &mut [u8; 128]) {
 
 #[inline(always)]
 /// HMAC-SHA512 one-shot function. Returns a MAC.
-pub fn hmac_sha512(key: &[u8], message: &[u8]) -> [u8; 64] {
+pub fn hmac_sha512(key: &[u8], message: &[u8]) -> MacArray {
     let mut hash_ires = Sha512::default();
     // Initialize to 128 * (0x00 ^ 0x36) so that
     // we can later xor the rest of the key in-place
-    let mut buffer = [0x36; 128];
+    let mut buffer = [0x36; SHA2_BLOCKSIZE];
     pad_key_to_ipad(key, &mut buffer);
     hash_ires.input(&buffer);
     hash_ires.input(message);
@@ -73,7 +82,7 @@ pub fn hmac_sha512(key: &[u8], message: &[u8]) -> [u8; 64] {
     hash_ores.input(&buffer);
     hash_ores.input(&hash_ires.result());
 
-    let mut mac: [u8; 64] = [0u8; 64];
+    let mut mac = [0u8; HLEN];
     mac.copy_from_slice(&hash_ores.result());
 
     zero(&mut buffer);
@@ -94,7 +103,7 @@ pub fn verify(expected_hmac: &[u8], key: &[u8], message: &[u8]) -> bool {
 
 /// Struct for using HMAC with streaming messages.
 pub struct HmacSha512 {
-    buffer: [u8; 128],
+    buffer: PadArray,
     hasher: Sha512,
     is_finalized: bool,
 }
@@ -147,11 +156,11 @@ impl HmacSha512 {
 
     #[inline(always)]
     /// Retrieve MAC.
-    pub fn finalize(&mut self) -> [u8; 64] {
+    pub fn finalize(&mut self) -> MacArray {
         let mut hash_ores = Sha512::default();
         self.core_finalize(&mut hash_ores);
 
-        let mut mac: [u8; 64] = [0u8; 64];
+        let mut mac = [0u8; HLEN];
         mac.copy_from_slice(&hash_ores.result());
 
         mac
@@ -173,7 +182,7 @@ pub fn init(secret_key: &[u8]) -> HmacSha512 {
     let mut mac = HmacSha512 {
         // Initialize to 128 * (0x00 ^ 0x36) so that
         // we can later xor the rest of the key in-place
-        buffer: [0x36; 128],
+        buffer: [0x36; SHA2_BLOCKSIZE],
         hasher: sha2::Sha512::default(),
         is_finalized: false,
     };
