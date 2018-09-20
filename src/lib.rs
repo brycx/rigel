@@ -35,7 +35,7 @@ pub const SHA2_BLOCKSIZE: usize = 128;
 pub const HLEN: usize = 64;
 /// Type for an array of length `SHA2_BLOCKSIZE`.
 pub type PadArray = [u8; SHA2_BLOCKSIZE];
-/// Type for a MAC-sized array.
+/// Type for a MAC-sized (`HLEN`) array.
 pub type MacArray = [u8; HLEN];
 
 #[inline(always)]
