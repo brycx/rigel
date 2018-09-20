@@ -21,8 +21,7 @@
 // SOFTWARE.
 
 #![no_std]
-#[cfg(test)]
-pub mod tests;
+
 extern crate seckey;
 extern crate sha2;
 extern crate subtle;

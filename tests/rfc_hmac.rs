@@ -24,10 +24,11 @@
 #[cfg(test)]
 mod rfc4231 {
 
+    extern crate rigel;
     extern crate hex;
     extern crate sha2;
     use self::hex::decode;
-    use {hmac_sha512, init, verify};
+    use self::rigel::{hmac_sha512, init, verify};
 
     fn hmac_test_runner(
         secret_key: &[u8],

@@ -12,6 +12,7 @@ license = "MIT"
 exclude = [
     ".gitignore",
     "benches/*",
+    "tests/*",
 ]
 
 [dependencies]
