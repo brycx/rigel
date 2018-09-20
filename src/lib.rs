@@ -30,7 +30,7 @@ use sha2::{Digest, Sha512};
 use subtle::ConstantTimeEq;
 use seckey::zero;
 
-
+#[inline(always)]
 /// Invert the buffer from opad to ipad or vice versa
 fn reverse_pad(buffer: &mut [u8; 128]) {
     for idx in buffer.iter_mut() {
@@ -41,6 +41,7 @@ fn reverse_pad(buffer: &mut [u8; 128]) {
     }
 }
 
+#[inline(always)]
 /// Pad key and construct inner-padding
 fn pad_key_to_ipad(key: &[u8], buffer: &mut [u8; 128]) {
     if key.len() > 128 {
@@ -106,6 +107,7 @@ impl Drop for HmacSha512 {
 }
 
 impl HmacSha512 {
+    #[inline(always)]
     /// Call the core finalization steps.
     fn core_finalize(&mut self, hash_ores: &mut Sha512) {
         if self.is_finalized {
@@ -122,7 +124,7 @@ impl HmacSha512 {
         hash_ores.input(&self.buffer);
         hash_ores.input(&hash_ires.result());
     }
-
+    #[inline(always)]
     /// Reset to 'init()' state.
     pub fn reset(&mut self) {
         if self.is_finalized {
@@ -130,13 +132,18 @@ impl HmacSha512 {
             self.hasher.input(&self.buffer);
             self.is_finalized = false;
         } else {
-            panic!("No need to reset");
+            ()
         }
     }
+    #[inline(always)]
     /// This can be called multiple times for streaming messages.
     pub fn update(&mut self, message: &[u8]) {
+        if self.is_finalized {
+            panic!("Unable to call update after finalize without reset");
+        }
         self.hasher.input(message);
     }
+    #[inline(always)]
     /// Retrieve MAC.
     pub fn finalize(&mut self) -> [u8; 64] {
         let mut hash_ores = Sha512::default();
@@ -147,6 +154,7 @@ impl HmacSha512 {
 
         mac
     }
+    #[inline(always)]
     /// Retrieve MAC and copy into `dst`.
     pub fn finalize_with_dst(&mut self, dst: &mut [u8]) {
         let mut hash_ores = Sha512::default();
@@ -205,12 +213,11 @@ fn finalize_no_reset_panic_3() {
 
 #[test]
 #[should_panic]
-fn double_reset() {
+fn update_after_finalize() {
     let mut mac = init("secret key".as_bytes());
     mac.update("msg".as_bytes());
     mac.finalize();
-    mac.reset();
-    mac.reset();
+    mac.update("msg".as_bytes());
 }
 
 #[test]
