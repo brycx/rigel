@@ -78,13 +78,9 @@ fn orion(b: &mut Bencher) {
     let message = "what do ya want for nothing?".as_bytes();
 
     b.iter(|| {
-        let mac = orion::hazardous::hmac::Hmac {
-            secret_key: key.to_vec(),
-            data: message.to_vec(),
-            sha2: orion::core::options::ShaVariantOption::SHA512,
-        };
-
-        mac.finalize();
+        let mut mac = orion::hazardous::hmac::init(&key);
+        mac.update(message).unwrap();
+        mac.finalize().unwrap();
     });
 }
 

@@ -21,8 +21,8 @@ seckey = { version = "0.9.1", default-features = false }
 
 [dev-dependencies]
 hex = "0.3.2"
-hmac = "0.6.2"
-orion = "0.4.3"
+hmac = "0.6.3"
+orion = "0.7.0"
 ring = "0.13.2"
 
 [profile.release]

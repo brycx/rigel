@@ -23,12 +23,12 @@
 #![no_std]
 #[cfg(test)]
 pub mod tests;
+extern crate seckey;
 extern crate sha2;
 extern crate subtle;
-extern crate seckey;
+use seckey::zero;
 use sha2::{Digest, Sha512};
 use subtle::ConstantTimeEq;
-use seckey::zero;
 
 #[inline(always)]
 /// Invert the buffer from opad to ipad or vice versa
@@ -124,6 +124,7 @@ impl HmacSha512 {
         hash_ores.input(&self.buffer);
         hash_ores.input(&hash_ires.result());
     }
+
     #[inline(always)]
     /// Reset to 'init()' state.
     pub fn reset(&mut self) {
@@ -135,6 +136,7 @@ impl HmacSha512 {
             ()
         }
     }
+
     #[inline(always)]
     /// This can be called multiple times for streaming messages.
     pub fn update(&mut self, message: &[u8]) {
@@ -143,6 +145,7 @@ impl HmacSha512 {
         }
         self.hasher.input(message);
     }
+
     #[inline(always)]
     /// Retrieve MAC.
     pub fn finalize(&mut self) -> [u8; 64] {
@@ -154,6 +157,7 @@ impl HmacSha512 {
 
         mac
     }
+
     #[inline(always)]
     /// Retrieve MAC and copy into `dst`.
     pub fn finalize_with_dst(&mut self, dst: &mut [u8]) {
@@ -167,7 +171,6 @@ impl HmacSha512 {
 
 /// Initialize HmacSha512 struct with a given key, for use with streaming messages.
 pub fn init(secret_key: &[u8]) -> HmacSha512 {
-
     let mut mac = HmacSha512 {
         // Initialize to 128 * (0x00 ^ 0x36) so that
         // we can later xor the rest of the key in-place
@@ -230,7 +233,11 @@ fn hmac_verify() {
     let mac_oneshot = hmac_sha512("secret key".as_bytes(), "msg".as_bytes());
 
     assert!(verify(&out, "secret key".as_bytes(), "msg".as_bytes()));
-    assert!(verify(&mac_oneshot, "secret key".as_bytes(), "msg".as_bytes()));
+    assert!(verify(
+        &mac_oneshot,
+        "secret key".as_bytes(),
+        "msg".as_bytes()
+    ));
     assert!(verify(&out, "secret key".as_bytes(), "msg".as_bytes()));
     assert!(verify(
         &mac_oneshot,
