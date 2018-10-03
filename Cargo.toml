@@ -16,7 +16,7 @@ exclude = [
 ]
 
 [dependencies]
-sha2 = "0.7.1"
+sha2 = "0.8.0"
 subtle = { version = "1.0.0", default-features = false }
 seckey = { version = "0.9.1", default-features = false }
 
