@@ -1,6 +1,6 @@
 [package]
 name = "rigel"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["brycx <brycx@protonmail.com>"]
 description = "HMAC-SHA512 implementation optimized for embedded devices"
 keywords = [ "cryptography", "crypto", "hmac", "optimization", "sha512" ]
@@ -16,7 +16,7 @@ exclude = [
 ]
 
 [dependencies]
-sha2 = "0.7.1"
+sha2 = { version = "0.8.0", default-features = false }
 subtle = { version = "1.0.0", default-features = false }
 seckey = { version = "0.9.1", default-features = false }
 

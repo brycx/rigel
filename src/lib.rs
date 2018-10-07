@@ -73,13 +73,13 @@ pub fn hmac_sha512(key: &[u8], message: &[u8]) -> MacArray {
     // we can later xor the rest of the key in-place
     let mut buffer = [0x36; SHA2_BLOCKSIZE];
     pad_key_to_ipad(key, &mut buffer);
-    hash_ires.input(&buffer);
+    hash_ires.input(buffer.as_ref());
     hash_ires.input(message);
 
     reverse_pad(&mut buffer);
 
     let mut hash_ores = Sha512::default();
-    hash_ores.input(&buffer);
+    hash_ores.input(buffer.as_ref());
     hash_ores.input(&hash_ires.result());
 
     let mut mac = [0u8; HLEN];
@@ -129,7 +129,7 @@ impl HmacSha512 {
 
         reverse_pad(&mut self.buffer);
 
-        hash_ores.input(&self.buffer);
+        hash_ores.input(self.buffer.as_ref());
         hash_ores.input(&hash_ires.result());
     }
 
@@ -138,7 +138,7 @@ impl HmacSha512 {
     pub fn reset(&mut self) {
         if self.is_finalized {
             reverse_pad(&mut self.buffer);
-            self.hasher.input(&self.buffer);
+            self.hasher.input(self.buffer.as_ref());
             self.is_finalized = false;
         } else {
             ()
@@ -188,7 +188,7 @@ pub fn init(secret_key: &[u8]) -> HmacSha512 {
     };
 
     pad_key_to_ipad(secret_key, &mut mac.buffer);
-    mac.hasher.input(&mac.buffer);
+    mac.hasher.input(mac.buffer.as_ref());
 
     mac
 }
