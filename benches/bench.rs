@@ -67,7 +67,6 @@ fn RustCrypto(b: &mut Bencher) {
     b.iter(|| {
         let mut mac = HmacSha512::new_varkey(&key).expect("HMAC can take key of any size");
         mac.input(message);
-
         mac.result();
     });
 }
@@ -78,7 +77,9 @@ fn orion(b: &mut Bencher) {
     let message = "what do ya want for nothing?".as_bytes();
 
     b.iter(|| {
-        let mut mac = orion::hazardous::hmac::init(&key);
+        let mut mac = orion::hazardous::mac::hmac::init(
+            &orion::hazardous::mac::hmac::SecretKey::from_slice(&key)
+        );
         mac.update(message).unwrap();
         mac.finalize().unwrap();
     });

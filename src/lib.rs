@@ -21,11 +21,12 @@
 // SOFTWARE.
 
 #![no_std]
+#![deny(warnings)]
 
-extern crate seckey;
+extern crate clear_on_drop;
 extern crate sha2;
 extern crate subtle;
-use seckey::zero;
+use clear_on_drop::clear::Clear;
 use sha2::{Digest, Sha512};
 use subtle::ConstantTimeEq;
 
@@ -85,7 +86,7 @@ pub fn hmac_sha512(key: &[u8], message: &[u8]) -> MacArray {
     let mut mac = [0u8; HLEN];
     mac.copy_from_slice(&hash_ores.result());
 
-    zero(&mut buffer);
+    buffer.clear();
 
     mac
 }
@@ -110,7 +111,8 @@ pub struct HmacSha512 {
 
 impl Drop for HmacSha512 {
     fn drop(&mut self) {
-        zero(&mut self.buffer)
+        use clear_on_drop::clear::Clear;
+        self.buffer.clear();
     }
 }
 

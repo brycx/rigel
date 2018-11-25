@@ -1,8 +1,8 @@
 [package]
 name = "rigel"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["brycx <brycx@protonmail.com>"]
-description = "HMAC-SHA512 implementation optimized for embedded devices"
+description = "Minimal HMAC-SHA512 implementation optimized for embedded devices"
 keywords = [ "cryptography", "crypto", "hmac", "optimization", "sha512" ]
 categories = [ "cryptography", "no-std" ]
 readme = "README.md"
@@ -17,14 +17,21 @@ exclude = [
 
 [dependencies]
 sha2 = { version = "0.8.0", default-features = false }
-subtle = { version = "1.0.0", default-features = false }
-seckey = { version = "0.9.1", default-features = false }
+
+[dependencies.subtle]
+version = "1.0.0"
+default-features = false
+features = ["nightly"]
+
+[dependencies.clear_on_drop]
+version = "0.2.3"
+features = ["nightly"]
 
 [dev-dependencies]
 hex = "0.3.2"
-hmac = "0.6.3"
-orion = "0.7.3"
-ring = "0.13.2"
+hmac = "0.7.0"
+orion = "0.11.0"
+ring = "0.13.5"
 
 [profile.release]
 opt-level = 3

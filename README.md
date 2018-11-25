@@ -1,4 +1,5 @@
-### rigel ![Build Status](https://travis-ci.org/brycx/rigel.svg?branch=master) [![codecov](https://codecov.io/gh/brycx/rigel/branch/master/graph/badge.svg)](https://codecov.io/gh/brycx/rigel)
+# rigel
+![Build Status](https://travis-ci.org/brycx/rigel.svg?branch=master) [![codecov](https://codecov.io/gh/brycx/rigel/branch/master/graph/badge.svg)](https://codecov.io/gh/brycx/rigel)
 
 
 ### About
@@ -8,13 +9,17 @@ still upholding performance speed.
 
 You can read more about these optimizations [here](https://brycx.github.io/2018/08/06/hmac-and-precomputation-optimization.html).
 
+
+### Rust nightly
+`rigel` requires Rust nightly.
+
 ### Security
 This library has at no point received any formal cryptographic/security audit. It
-should be used at own risk.
+should be **used at own risk**.
 
 ### Example
 
-***With the one-shot API:***
+***One-shot API:***
 ```rust
 extern crate rigel;
 
@@ -24,7 +29,7 @@ assert!(rigel::verify(&mac, "Secret key".as_bytes(), "Message".as_bytes()));
 
 ```
 
-***With streaming messages:***
+***Streaming API:***
 ```rust
 extern crate rigel;
 
