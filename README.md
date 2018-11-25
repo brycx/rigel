@@ -46,11 +46,11 @@ mac.finalize_with_dst(&mut mac_out);
 
 ### Performance
 ```rust
-test RustCrypto     ... bench:       2,629 ns/iter (+/- 293)
-test orion          ... bench:       2,224 ns/iter (+/- 78)
-test rigel_one_shot ... bench:       2,095 ns/iter (+/- 36)
-test rigel_stream   ... bench:       2,188 ns/iter (+/- 81)
-test ring           ... bench:       3,296 ns/iter (+/- 51)
+test RustCrypto     ... bench:       2,185 ns/iter (+/- 241)
+test orion          ... bench:       2,350 ns/iter (+/- 60)
+test rigel_one_shot ... bench:       2,070 ns/iter (+/- 43)
+test rigel_stream   ... bench:       2,122 ns/iter (+/- 35)
+test ring           ... bench:       3,357 ns/iter (+/- 91)
 ```
 This was benchmarked on a MacBook Air 1,6 GHz Intel Core i5, 4GB.
 
