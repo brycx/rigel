@@ -60,9 +60,7 @@ fn pad_key_to_ipad(key: &[u8], buffer: &mut PadArray) {
             *itm ^= 0x36;
         }
     } else {
-        for idx in 0..key.len() {
-            buffer[idx] ^= key[idx];
-        }
+        buffer.iter_mut().zip(key.iter()).for_each(|(a, b)| *a ^= b);
     }
 }
 
