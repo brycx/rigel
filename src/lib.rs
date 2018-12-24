@@ -138,11 +138,10 @@ impl HmacSha512 {
     pub fn reset(&mut self) {
         if self.is_finalized {
             reverse_pad(&mut self.buffer);
-            self.hasher.input(self.buffer.as_ref());
-            self.is_finalized = false;
-        } else {
-            ()
         }
+        self.hasher = sha2::Sha512::default();
+        self.hasher.input(self.buffer.as_ref());
+        self.is_finalized = false;
     }
 
     #[inline(always)]
@@ -276,4 +275,31 @@ fn hmac_verify_after_reset_err() {
     mac.update("other message".as_bytes());
 
     assert_ne!(out.as_ref(), mac.finalize().as_ref());
+}
+
+#[test]
+fn reset_after_update_correct_resets() {
+	let state_1 = init("Jefe".as_bytes());
+
+	let mut state_2 = init("Jefe".as_bytes());
+	state_2.update(b"Tests");
+	state_2.reset();
+
+	assert_eq!(state_1.buffer[..], state_2.buffer[..]);
+	assert_eq!(state_1.is_finalized, state_2.is_finalized);
+}
+
+#[test]
+fn reset_after_update_correct_resets_and_verify() {
+	let mut state_1 = init("Jefe".as_bytes());
+	state_1.update(b"Tests");
+	let d1 = state_1.finalize();
+
+	let mut state_2 = init("Jefe".as_bytes());
+	state_2.update(b"Tests");
+	state_2.reset();
+	state_2.update(b"Tests");
+	let d2 = state_2.finalize();
+
+	assert_eq!(d1[..], d2[..]);
 }
