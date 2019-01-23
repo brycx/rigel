@@ -31,7 +31,7 @@ features = ["nightly"]
 hex = "0.3.2"
 hmac = "0.7.0"
 orion = "0.11.0"
-ring = "0.13.5"
+ring = "0.14.3"
 
 [profile.release]
 opt-level = 3
