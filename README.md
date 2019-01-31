@@ -3,9 +3,7 @@
 
 
 ### About
-`rigel` is a minimal implementation of HMAC with SHA512, which is optimized for use
-with embedded devices. `rigel` minimizes the amount of allocations made, while
-still upholding performance speed.
+`rigel` is a minimal implementation of HMAC with SHA512. `rigel` minimizes the amount of allocations made, while still upholding performance speed.
 
 You can read more about these optimizations [here](https://brycx.github.io/2018/08/06/hmac-and-precomputation-optimization.html).
 
@@ -45,14 +43,17 @@ mac.finalize_with_dst(&mut mac_out);
 ```
 
 ### Performance
+
+You can read more about these benchmarks [here](https://brycx.github.io/2018/08/06/hmac-and-precomputation-optimization.html).
+
 ```
-test RustCrypto     ... bench:       2,039 ns/iter (+/- 14)
-test orion          ... bench:       2,206 ns/iter (+/- 0)
-test rigel_one_shot ... bench:       1,922 ns/iter (+/- 0)
-test rigel_stream   ... bench:       1,999 ns/iter (+/- 0)
-test ring           ... bench:       1,293 ns/iter (+/- 1)
+test RustCrypto     ... bench:       2,168 ns/iter (+/- 141)
+test orion          ... bench:       2,207 ns/iter (+/- 52)
+test rigel_one_shot ... bench:       2,077 ns/iter (+/- 53)
+test rigel_stream   ... bench:       2,127 ns/iter (+/- 36)
+test ring           ... bench:       1,463 ns/iter (+/- 37)
 ```
-This was benchmarked on a Intel Core i9-7960X CPU @ 2.80GHz.
+This was benchmarked on a MacBook Air 1,6 GHz Intel Core i5, 4GB.
 
 ### License
 `rigel` is licensed under the MIT license. See the `LICENSE` file for more information.
