@@ -32,8 +32,8 @@ features = ["nightly"]
 [dev-dependencies]
 hex = "0.3.2"
 hmac = "0.7.0"
-ring = "0.13.5"
 sha2 = "0.8.0"
+ring = "0.14.4"
 
 [profile.release]
 opt-level = 3

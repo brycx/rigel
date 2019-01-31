@@ -45,14 +45,14 @@ mac.finalize_with_dst(&mut mac_out);
 ```
 
 ### Performance
-```rust
-test RustCrypto     ... bench:       2,185 ns/iter (+/- 241)
-test orion          ... bench:       2,350 ns/iter (+/- 60)
-test rigel_one_shot ... bench:       2,070 ns/iter (+/- 43)
-test rigel_stream   ... bench:       2,122 ns/iter (+/- 35)
-test ring           ... bench:       3,357 ns/iter (+/- 91)
 ```
-This was benchmarked on a MacBook Air 1,6 GHz Intel Core i5, 4GB.
+test RustCrypto     ... bench:       2,039 ns/iter (+/- 14)
+test orion          ... bench:       2,206 ns/iter (+/- 0)
+test rigel_one_shot ... bench:       1,922 ns/iter (+/- 0)
+test rigel_stream   ... bench:       1,999 ns/iter (+/- 0)
+test ring           ... bench:       1,293 ns/iter (+/- 1)
+```
+This was benchmarked on a Intel Core i9-7960X CPU @ 2.80GHz.
 
 ### License
 `rigel` is licensed under the MIT license. See the `LICENSE` file for more information.
