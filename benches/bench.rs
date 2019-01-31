@@ -78,7 +78,7 @@ fn orion(b: &mut Bencher) {
 
     b.iter(|| {
         let mut mac = orion::hazardous::mac::hmac::init(
-            &orion::hazardous::mac::hmac::SecretKey::from_slice(&key)
+            &orion::hazardous::mac::hmac::SecretKey::from_slice(&key).unwrap(),
         );
         mac.update(message).unwrap();
         mac.finalize().unwrap();

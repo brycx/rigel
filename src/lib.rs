@@ -24,10 +24,10 @@
 #![deny(warnings)]
 
 extern crate clear_on_drop;
-extern crate sha2;
+extern crate orion;
 extern crate subtle;
 use clear_on_drop::clear::Clear;
-use sha2::{Digest, Sha512};
+use orion::hazardous::hash::sha512;
 use subtle::ConstantTimeEq;
 
 /// The blocksize for the hash function SHA512.
@@ -54,7 +54,7 @@ fn reverse_pad(buffer: &mut PadArray) {
 /// Pad key and construct inner-padding
 fn pad_key_to_ipad(key: &[u8], buffer: &mut PadArray) {
     if key.len() > SHA2_BLOCKSIZE {
-        buffer[..HLEN].copy_from_slice(&sha2::Sha512::digest(&key));
+        buffer[..HLEN].copy_from_slice(sha512::digest(&key).unwrap().as_bytes());
 
         for itm in buffer.iter_mut().take(HLEN) {
             *itm ^= 0x36;
@@ -67,22 +67,24 @@ fn pad_key_to_ipad(key: &[u8], buffer: &mut PadArray) {
 #[inline(always)]
 /// HMAC-SHA512 one-shot function. Returns a MAC.
 pub fn hmac_sha512(key: &[u8], message: &[u8]) -> MacArray {
-    let mut hash_ires = Sha512::default();
+    let mut hash_ires = sha512::init();
     // Initialize to 128 * (0x00 ^ 0x36) so that
     // we can later xor the rest of the key in-place
     let mut buffer = [0x36; SHA2_BLOCKSIZE];
     pad_key_to_ipad(key, &mut buffer);
-    hash_ires.input(buffer.as_ref());
-    hash_ires.input(message);
+    hash_ires.update(buffer.as_ref()).unwrap();
+    hash_ires.update(message).unwrap();
 
     reverse_pad(&mut buffer);
 
-    let mut hash_ores = Sha512::default();
-    hash_ores.input(buffer.as_ref());
-    hash_ores.input(&hash_ires.result());
+    let mut hash_ores = sha512::init();
+    hash_ores.update(buffer.as_ref()).unwrap();;
+    hash_ores
+        .update(hash_ires.finalize().unwrap().as_bytes())
+        .unwrap();;
 
     let mut mac = [0u8; HLEN];
-    mac.copy_from_slice(&hash_ores.result());
+    mac.copy_from_slice(hash_ores.finalize().unwrap().as_bytes());
 
     buffer.clear();
 
@@ -103,7 +105,7 @@ pub fn verify(expected_hmac: &[u8], key: &[u8], message: &[u8]) -> bool {
 /// Struct for using HMAC with streaming messages.
 pub struct HmacSha512 {
     buffer: PadArray,
-    hasher: Sha512,
+    hasher: sha512::Sha512,
     is_finalized: bool,
 }
 
@@ -117,20 +119,22 @@ impl Drop for HmacSha512 {
 impl HmacSha512 {
     #[inline(always)]
     /// Call the core finalization steps.
-    fn core_finalize(&mut self, hash_ores: &mut Sha512) {
+    fn core_finalize(&mut self, hash_ores: &mut sha512::Sha512) {
         if self.is_finalized {
             panic!("Unable to call finalize twice without reset");
         }
 
         self.is_finalized = true;
 
-        let mut hash_ires = Sha512::default();
+        let mut hash_ires = sha512::init();
         core::mem::swap(&mut self.hasher, &mut hash_ires);
 
         reverse_pad(&mut self.buffer);
 
-        hash_ores.input(self.buffer.as_ref());
-        hash_ores.input(&hash_ires.result());
+        hash_ores.update(self.buffer.as_ref()).unwrap();
+        hash_ores
+            .update(&hash_ires.finalize().unwrap().as_bytes())
+            .unwrap();
     }
 
     #[inline(always)]
@@ -139,8 +143,8 @@ impl HmacSha512 {
         if self.is_finalized {
             reverse_pad(&mut self.buffer);
         }
-        self.hasher = sha2::Sha512::default();
-        self.hasher.input(self.buffer.as_ref());
+        self.hasher = sha512::init();
+        self.hasher.update(self.buffer.as_ref()).unwrap();
         self.is_finalized = false;
     }
 
@@ -150,17 +154,17 @@ impl HmacSha512 {
         if self.is_finalized {
             panic!("Unable to call update after finalize without reset");
         }
-        self.hasher.input(message);
+        self.hasher.update(message).unwrap();
     }
 
     #[inline(always)]
     /// Retrieve MAC.
     pub fn finalize(&mut self) -> MacArray {
-        let mut hash_ores = Sha512::default();
+        let mut hash_ores = sha512::init();
         self.core_finalize(&mut hash_ores);
 
         let mut mac = [0u8; HLEN];
-        mac.copy_from_slice(&hash_ores.result());
+        mac.copy_from_slice(&hash_ores.finalize().unwrap().as_bytes());
 
         mac
     }
@@ -168,11 +172,11 @@ impl HmacSha512 {
     #[inline(always)]
     /// Retrieve MAC and copy into `dst`.
     pub fn finalize_with_dst(&mut self, dst: &mut [u8]) {
-        let mut hash_ores = Sha512::default();
+        let mut hash_ores = sha512::init();
         self.core_finalize(&mut hash_ores);
         let dst_len = dst.len();
 
-        dst.copy_from_slice(&hash_ores.result()[..dst_len]);
+        dst.copy_from_slice(&hash_ores.finalize().unwrap().as_bytes()[..dst_len]);
     }
 }
 
@@ -182,12 +186,12 @@ pub fn init(secret_key: &[u8]) -> HmacSha512 {
         // Initialize to 128 * (0x00 ^ 0x36) so that
         // we can later xor the rest of the key in-place
         buffer: [0x36; SHA2_BLOCKSIZE],
-        hasher: sha2::Sha512::default(),
+        hasher: sha512::init(),
         is_finalized: false,
     };
 
     pad_key_to_ipad(secret_key, &mut mac.buffer);
-    mac.hasher.input(mac.buffer.as_ref());
+    mac.hasher.update(mac.buffer.as_ref()).unwrap();
 
     mac
 }
@@ -279,27 +283,27 @@ fn hmac_verify_after_reset_err() {
 
 #[test]
 fn reset_after_update_correct_resets() {
-	let state_1 = init("Jefe".as_bytes());
+    let state_1 = init("Jefe".as_bytes());
 
-	let mut state_2 = init("Jefe".as_bytes());
-	state_2.update(b"Tests");
-	state_2.reset();
+    let mut state_2 = init("Jefe".as_bytes());
+    state_2.update(b"Tests");
+    state_2.reset();
 
-	assert_eq!(state_1.buffer[..], state_2.buffer[..]);
-	assert_eq!(state_1.is_finalized, state_2.is_finalized);
+    assert_eq!(state_1.buffer[..], state_2.buffer[..]);
+    assert_eq!(state_1.is_finalized, state_2.is_finalized);
 }
 
 #[test]
 fn reset_after_update_correct_resets_and_verify() {
-	let mut state_1 = init("Jefe".as_bytes());
-	state_1.update(b"Tests");
-	let d1 = state_1.finalize();
+    let mut state_1 = init("Jefe".as_bytes());
+    state_1.update(b"Tests");
+    let d1 = state_1.finalize();
 
-	let mut state_2 = init("Jefe".as_bytes());
-	state_2.update(b"Tests");
-	state_2.reset();
-	state_2.update(b"Tests");
-	let d2 = state_2.finalize();
+    let mut state_2 = init("Jefe".as_bytes());
+    state_2.update(b"Tests");
+    state_2.reset();
+    state_2.update(b"Tests");
+    let d2 = state_2.finalize();
 
-	assert_eq!(d1[..], d2[..]);
+    assert_eq!(d1[..], d2[..]);
 }

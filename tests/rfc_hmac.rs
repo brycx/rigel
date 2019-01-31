@@ -26,7 +26,6 @@ mod rfc4231 {
 
     extern crate hex;
     extern crate rigel;
-    extern crate sha2;
     use self::hex::decode;
     use self::rigel::{hmac_sha512, init, verify};
 

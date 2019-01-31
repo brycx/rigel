@@ -15,8 +15,10 @@ exclude = [
     "tests/*",
 ]
 
-[dependencies]
-sha2 = { version = "0.8.0", default-features = false }
+[dependencies.orion]
+version = "0.12.4"
+default-features = false
+features = ["no_std"]
 
 [dependencies.subtle]
 version = "2"
@@ -30,8 +32,8 @@ features = ["nightly"]
 [dev-dependencies]
 hex = "0.3.2"
 hmac = "0.7.0"
-orion = "0.11.0"
 ring = "0.13.5"
+sha2 = "0.8.0"
 
 [profile.release]
 opt-level = 3
