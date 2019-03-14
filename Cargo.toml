@@ -16,7 +16,7 @@ exclude = [
 ]
 
 [dependencies.orion]
-version = "0.12.4"
+version = "0.13.2"
 default-features = false
 features = ["no_std"]
 
